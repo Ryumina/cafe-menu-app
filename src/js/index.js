@@ -23,35 +23,32 @@
 // 약간 제이쿼리같은 느낌?
 const $ = (selector) => document.querySelector(selector);
 
+const store = {
+  setLocalStorage(menu) {
+    localStorage.setItem("menu", JSON.stringify(menu));
+  },
+  getLocalStorage() {
+    localStorage.getItem("menu");
+  },
+};
+
 function App() {
-
-    $("#espresso-menu-list").addEventListener("click", (e) => {
-
-        if (e.target.classList.contains("menu-edit-button")) {
-            const $menuName = e.target
-              .closest("li")
-              .querySelector(".menu-name");
-
-            const updatedMenuName = prompt(
-              "메뉴명을 수정하세요",
-              $menuName.innerText
-            );
-        
-            $menuName.innerText = updatedMenuName;
-        }
-    });
-
-    // form 태그가 자동으로 전송되는 것을 막아준다.
-    $("#espresso-menu-form")
-        .addEventListener("submit", (e) => {
-            e.preventDefault();
-        });
+    this.menu = [];
     
-    // 메뉴 이름을 입력받아 메뉴를 추가한다.
-    const addMenuName = (menuName) => {
-      const menuItemTemplate = (menuName) => {
+  // 메뉴 수 업데이트
+  const updateMenuCount = () => {
+    const menuCnt = $("#espresso-menu-list").querySelectorAll("li").length;
+    $(".menu-count").innerText = `총 ${menuCnt} 개`;
+  };
+
+  // 메뉴 추가
+  const addMenuName = (menuName) => {
+    this.menu.push({ name: menuName });
+    store.setLocalStorage(this.menu);
+
+    const template = this.menu.map((item) => {
         return `<li class="menu-list-item d-flex items-center py-2">
-                    <span class="w-100 pl-2 menu-name">${menuName}</span>
+                    <span class="w-100 pl-2 menu-name">${item.name}</span>
                     <button
                         type="button"
                         class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
@@ -65,46 +62,75 @@ function App() {
                         삭제
                     </button>
                 </li>`;
-      };
+    }).join("");
 
-      $("#espresso-menu-list").insertAdjacentHTML(
-        "beforeend",
-        menuItemTemplate(menuName)
-      );
+    $("#espresso-menu-list").innerHTML = template;
 
-      let menuCnt = $("#espresso-menu-list").querySelectorAll("li").length;
-      $(".menu-count").innerText = `총 ${menuCnt} 개`;
+    $("#espresso-menu-name").value = "";
 
-      $("#espresso-menu-name").value = "";
-    };
+    updateMenuCount();
+  };
 
-    // 확인 버튼 클릭시
-    $("#espresso-menu-submit-button").addEventListener("click", (e) => {
-        let menuName = $("#espresso-menu-name").value;
+  // 메뉴 수정
+  const updateMenuName = (e) => {
+    const $menuName = e.target.closest("li").querySelector(".menu-name");
 
-        if (!menuName && menuName == "") {
-            alert("값을 입력해 주세요.");
-            return;
-        } else {
-            addMenuName(menuName);
-        }
-    });
+    const updatedMenuName = prompt("메뉴명을 수정하세요", $menuName.innerText);
 
-    // 메뉴 이름을 입력했을 때
-    $("#espresso-menu-name").addEventListener("keypress", (e) => {
+    if (updatedMenuName) $menuName.innerText = updatedMenuName;
+  }
 
-        if(e.key === "Enter") {
-            const menuName = $("#espresso-menu-name").value;
+  // 메뉴 삭제
+  const removeMenuName = (e) => {
+    const $menuName = e.target.closest("li").querySelector(".menu-name");
 
-            if (!menuName && menuName == "") {
-                alert("값을 입력해 주세요.");
-                return;
-            } else {
-                addMenuName(menuName);
-            }
-        }
-    });
+    if (confirm($menuName.innerText + "를 삭제하시겠습니까?")) {
+      e.target.closest("li").remove();
+      updateMenuCount();
+    }
+  }
+
+  // 메뉴 수정, 삭제
+  $("#espresso-menu-list").addEventListener("click", (e) => {
+
+    // 수정
+    if (e.target.classList.contains("menu-edit-button")) updateMenuName(e);
+
+    // 삭제
+    if (e.target.classList.contains("menu-remove-button")) removeMenuName(e);
+  });
+
+  // form 태그가 자동으로 전송되는 것을 막아준다.
+  $("#espresso-menu-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+  });
+
+  // 확인 버튼 클릭시
+  $("#espresso-menu-submit-button").addEventListener("click", (e) => {
+    let menuName = $("#espresso-menu-name").value;
+
+    if (!menuName && menuName == "") {
+      alert("값을 입력해 주세요.");
+      return;
+    } else {
+      addMenuName(menuName);
+    }
+  });
+
+  // 메뉴 이름을 입력했을 때
+  $("#espresso-menu-name").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      const menuName = $("#espresso-menu-name").value;
+
+      if (!menuName && menuName == "") {
+        alert("값을 입력해 주세요.");
+        return;
+      } else {
+        addMenuName(menuName);
+      }
+    }
+  });
 }
 
-App();
+const app = new App();
 
