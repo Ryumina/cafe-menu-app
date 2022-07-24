@@ -33,10 +33,18 @@ const store = {
 };
 
 function App() {
-    this.menu = [];
+    this.menu = {
+      espresso: [],
+      frappuccino: [],
+      blended: [],
+      teavana: [],
+      desert: []
+    };
+
+    this.currentCategory = "espresso";
 
     this.init = () => {
-      console.log(store.getLocalStorage().length);
+      // console.log(store.getLocalStorage().length);
       if(store.getLocalStorage() && store.getLocalStorage().length > 0) {
         this.menu = store.getLocalStorage();
       }
@@ -45,7 +53,7 @@ function App() {
     };
 
     const render = () => {
-      const template = this.menu
+      const template = this.menu[this.currentCategory]
         .map((item, index) => {
           return `<li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
                       <span class="w-100 pl-2 menu-name">${item.name}</span>
@@ -78,7 +86,7 @@ function App() {
 
     // 메뉴 추가
     const addMenuName = (menuName) => {
-      this.menu.push({ name: menuName });
+      this.menu[this.currentCategory].push({ name: menuName });
       store.setLocalStorage(this.menu);
 
       render();
@@ -153,6 +161,16 @@ function App() {
         }
       }
     });
+
+    $("nav").addEventListener("click", (e) => {
+      const isCategoryButton = e.target.classList.contains("cafe-category-name");
+      if (isCategoryButton) {
+        const categoryName = e.target.dataset.categoryName;
+        console.log(categoryName);
+
+        this.currentCategory = categoryName;
+      }
+    })
 }
 
 const app = new App();
