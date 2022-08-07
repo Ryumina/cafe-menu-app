@@ -54,8 +54,14 @@ function App() {
     const render = () => {
       const template = this.menu[this.currentCategory]
         .map((item, index) => {
-          return `<li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
+          return `<li data-menu-id="${index}" class="${item.soldOut ? "sold-out" : ""} menu-list-item d-flex items-center py-2">
                       <span class="w-100 pl-2 menu-name">${item.name}</span>
+                      <button
+                          type="button"
+                          class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button"
+                      >
+                          품절
+                      </button>
                       <button
                           type="button"
                           class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
@@ -121,14 +127,36 @@ function App() {
       }
     }
 
-    // 메뉴 수정, 삭제
+    const soldOutMenu = (e) => {
+      const soldOutMenuIdx = e.target.closest("li").dataset.menuId;
+      this.menu[this.currentCategory][soldOutMenuIdx].soldOut =
+        !this.menu[this.currentCategory][soldOutMenuIdx].soldOut;
+
+      store.setLocalStorage(this.menu);
+
+      render();
+    }
+
+    // 메뉴 수정, 삭제, 품절
     $("#menu-list").addEventListener("click", (e) => {
 
       // 수정
-      if (e.target.classList.contains("menu-edit-button")) updateMenuName(e);
+      if (e.target.classList.contains("menu-edit-button")) {
+        updateMenuName(e);
+        return;
+      }
 
       // 삭제
-      if (e.target.classList.contains("menu-remove-button")) removeMenuName(e);
+      if (e.target.classList.contains("menu-remove-button")) {
+        removeMenuName(e);
+        return;
+      }
+    
+      // 품절
+      if (e.target.classList.contains("menu-sold-out-button")) {
+        soldOutMenu(e);
+        return;
+      }
     });
 
     // form 태그가 자동으로 전송되는 것을 막아준다.
