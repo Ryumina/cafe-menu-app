@@ -22,6 +22,8 @@
 import { $ } from "./utils/dom.js";
 import store from "./store/index.js";
 
+const BASE_URL = "http://localhost:3000/api";
+
 function App() {
     this.menu = {
       espresso: [],
@@ -81,13 +83,34 @@ function App() {
     };
 
     // 메뉴 추가
-    const addMenuName = (menuName) => {
-      this.menu[this.currentCategory].push({ name: menuName });
-      store.setLocalStorage(this.menu);
+    const addMenuName = async (menuName) => {
+      // 기다렸으면 하는 로직 부분 앞에 await 써주기
+      // 순서 보장 부분 1
+      await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, {
+        method: "POST",
+        headers: {
+          "Content-Type" : "application/json"
+        },
+        body: JSON.stringify({name : menuName})
+      }).then((response) => {
+        return response.json();
+      }).then(data => {
+        console.log(data);
+      });
 
-      render();
+      // 순서 보장 부분 2
+      await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`)
+        .then((response) => {
+          return response.json();
+        }).then(data => {
+          this.menu[this.currentCategory] = data;
+          render();
+          $("#menu-name").value = "";
+      });
 
-      $("#menu-name").value = "";
+      // 기존 로컬 스토리지를 통한 작업은 제거
+      // this.menu[this.currentCategory].push({ name: menuName });
+      // store.setLocalStorage(this.menu);
     };
 
     // 메뉴 수정
