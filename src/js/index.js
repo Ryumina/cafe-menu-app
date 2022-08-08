@@ -24,6 +24,13 @@ import store from "./store/index.js";
 
 const BASE_URL = "http://localhost:3000/api";
 
+const MenuApi = {
+  async getAllMenuByCategory(category) {
+    const response =  await fetch(`${BASE_URL}/category/${category}/menu`)
+    return response.json();
+  }
+}
+
 function App() {
     this.menu = {
       espresso: [],
@@ -35,11 +42,11 @@ function App() {
 
     this.currentCategory = "espresso";
 
-    this.init = () => {
-      if(store.getLocalStorage()) {
-        this.menu = store.getLocalStorage();
-      }
-      
+    this.init = async () => {
+      console.log(this.menu[this.currentCategory]);
+      // console.log(this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory));
+      this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+
       render();
       initEventListeners();
     };
@@ -99,18 +106,9 @@ function App() {
       });
 
       // 순서 보장 부분 2
-      await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`)
-        .then((response) => {
-          return response.json();
-        }).then(data => {
-          this.menu[this.currentCategory] = data;
-          render();
-          $("#menu-name").value = "";
-      });
-
-      // 기존 로컬 스토리지를 통한 작업은 제거
-      // this.menu[this.currentCategory].push({ name: menuName });
-      // store.setLocalStorage(this.menu);
+      this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+      render();
+      $("#menu-name").value = "";
     };
 
     // 메뉴 수정
