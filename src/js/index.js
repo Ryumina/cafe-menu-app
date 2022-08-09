@@ -81,10 +81,17 @@ function App() {
 
     // 메뉴 추가
     const addMenuName = async (menuName) => {
-      await MenuApi.createMenu(this.currentCategory, menuName);
+      const duplicatedMenu = this.menu[this.currentCategory].find(menuItem => menuItem.name == menuName);
 
-      render();
-      $("#menu-name").value = "";
+      if(duplicatedMenu) {
+        alert("이미 등록된 메뉴입니다. 다시 입력해 주세요.");
+        $("#menu-name").value = "";
+        return;
+      } else {
+        await MenuApi.createMenu(this.currentCategory, menuName);
+        $("#menu-name").value = "";
+        render();
+      }
     };
 
     // 메뉴 수정
