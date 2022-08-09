@@ -55,11 +55,19 @@ const MenuApi = {
     return response.json();
   },
   async toggleSoldOutMenu(category, menuId) {
-    const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}/soldOut`, {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}/soldout`, {
       method: "PUT"
     });
     if(!response.ok) {
       console.error("메뉴 품절 처리가 실패하였습니다.");
+    }
+  },
+  async deleteMenu(category, menuId) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`, {
+      method: "DELETE"
+    });
+    if(!response.ok) {
+      console.error("메뉴 삭제가 실패하였습니다.");
     }
   }
 }
@@ -146,15 +154,14 @@ function App() {
     }
 
     // 메뉴 삭제
-    const removeMenuName = (e) => {
+    const removeMenuName = async (e) => {
       const $menuName = e.target.closest("li").querySelector(".menu-name");
-      const deleteMenuIdx = e.target.closest("li").dataset.menuId;
+      const deleteMenuId = e.target.closest("li").dataset.menuId;
 
       if (confirm($menuName.innerText + "를 삭제하시겠습니까?")) {
-        this.menu[this.currentCategory].splice(deleteMenuIdx, 1);
-        store.setLocalStorage(this.menu);
+        await MenuApi.deleteMenu(this.currentCategory, deleteMenuId);
 
-        e.target.closest("li").remove();
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         render();
       }
     }
