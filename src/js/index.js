@@ -29,7 +29,6 @@ const MenuApi = {
     const response =  await fetch(`${BASE_URL}/category/${category}/menu`)
     return response.json();
   },
-
   async createMenu(category, name) {
     const response = await fetch(`${BASE_URL}/category/${category}/menu`, {
       method: "POST",
@@ -39,8 +38,21 @@ const MenuApi = {
       body: JSON.stringify({name})
     });
     if(!response.ok) {
-      console.error("메뉴를 생성이 실피하였습니다.");
+      console.error("메뉴 생성이 실패하였습니다.");
     }
+  },
+  async updateMenu(category, name, menuId) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type" : "application/json"
+      },
+      body: JSON.stringify({name})
+    })
+    if(!response.ok) {
+      console.error("메뉴 수정이 실패하였습니다.");
+    }
+    return response.json();
   }
 }
 
@@ -67,7 +79,7 @@ function App() {
     const render = () => {
       const template = this.menu[this.currentCategory]
         .map((item, index) => {
-          return `<li data-menu-id="${index}" class="${item.soldOut ? "sold-out" : ""} menu-list-item d-flex items-center py-2">
+          return `<li data-menu-id="${item.id}" class="${item.soldOut ? "sold-out" : ""} menu-list-item d-flex items-center py-2">
                       <span class="w-100 pl-2 menu-name">${item.name}</span>
                       <button
                           type="button"
@@ -116,16 +128,19 @@ function App() {
     };
 
     // 메뉴 수정
-    const updateMenuName = (e) => {
+    const updateMenuName = async (e) => {
       const $menuName = e.target.closest("li").querySelector(".menu-name");
-      const updateMenuIdx = e.target.closest("li").dataset.menuId;
+      const updateMenuId = e.target.closest("li").dataset.menuId;
 
       const updatedMenuName = prompt("메뉴명을 수정하세요", $menuName.innerText);
 
       if (updatedMenuName) {
-        this.menu[this.currentCategory][updateMenuIdx].name = updatedMenuName;
-        store.setLocalStorage(this.menu);
-        
+        await MenuApi.updateMenu(this.currentCategory, updatedMenuName, updateMenuId);
+
+        // this.menu[this.currentCategory][updateMenuIdx].name = updatedMenuName;
+        // store.setLocalStorage(this.menu);
+
+        this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         render();
       }
     }
