@@ -28,6 +28,19 @@ const MenuApi = {
   async getAllMenuByCategory(category) {
     const response =  await fetch(`${BASE_URL}/category/${category}/menu`)
     return response.json();
+  },
+
+  async createMenu(category, name) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu`, {
+      method: "POST",
+      headers: {
+        "Content-Type" : "application/json"
+      },
+      body: JSON.stringify({name})
+    });
+    if(!response.ok) {
+      console.error("메뉴를 생성이 실피하였습니다.");
+    }
   }
 }
 
@@ -91,19 +104,10 @@ function App() {
 
     // 메뉴 추가
     const addMenuName = async (menuName) => {
+
       // 기다렸으면 하는 로직 부분 앞에 await 써주기
       // 순서 보장 부분 1
-      await fetch(`${BASE_URL}/category/${this.currentCategory}/menu`, {
-        method: "POST",
-        headers: {
-          "Content-Type" : "application/json"
-        },
-        body: JSON.stringify({name : menuName})
-      }).then((response) => {
-        return response.json();
-      }).then(data => {
-        console.log(data);
-      });
+      await MenuApi.createMenu(this.currentCategory, menuName);
 
       // 순서 보장 부분 2
       this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
@@ -206,7 +210,7 @@ function App() {
       });
 
       // 메뉴 카테고리 클릭시
-      $("nav").addEventListener("click", (e) => {
+      $("nav").addEventListener("click", async (e) => {
         const isCategoryButton =
           e.target.classList.contains("cafe-category-name");
         if (isCategoryButton) {
@@ -215,6 +219,9 @@ function App() {
 
           this.currentCategory = categoryName;
           $("#categoryTitle").innerText = `${e.target.innerText} 메뉴 관리`;
+
+          this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
+
           render();
         }
       });
