@@ -26,7 +26,7 @@ const BASE_URL = "http://localhost:3000/api";
 
 const MenuApi = {
   async getAllMenuByCategory(category) {
-    const response =  await fetch(`${BASE_URL}/category/${category}/menu`)
+    const response =  await fetch(`${BASE_URL}/category/${category}/menu`);
     return response.json();
   },
   async createMenu(category, name) {
@@ -48,11 +48,19 @@ const MenuApi = {
         "Content-Type" : "application/json"
       },
       body: JSON.stringify({name})
-    })
+    });
     if(!response.ok) {
       console.error("메뉴 수정이 실패하였습니다.");
     }
     return response.json();
+  },
+  async toggleSoldOutMenu(category, menuId) {
+    const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}/soldOut`, {
+      method: "PUT"
+    });
+    if(!response.ok) {
+      console.error("메뉴 품절 처리가 실패하였습니다.");
+    }
   }
 }
 
@@ -68,8 +76,6 @@ function App() {
     this.currentCategory = "espresso";
 
     this.init = async () => {
-      console.log(this.menu[this.currentCategory]);
-      // console.log(this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory));
       this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
 
       render();
@@ -79,7 +85,7 @@ function App() {
     const render = () => {
       const template = this.menu[this.currentCategory]
         .map((item, index) => {
-          return `<li data-menu-id="${item.id}" class="${item.soldOut ? "sold-out" : ""} menu-list-item d-flex items-center py-2">
+          return `<li data-menu-id="${item.id}" class="${item.isSoldOut ? "sold-out" : ""} menu-list-item d-flex items-center py-2">
                       <span class="w-100 pl-2 menu-name">${item.name}</span>
                       <button
                           type="button"
@@ -116,14 +122,11 @@ function App() {
 
     // 메뉴 추가
     const addMenuName = async (menuName) => {
-
-      // 기다렸으면 하는 로직 부분 앞에 await 써주기
-      // 순서 보장 부분 1
       await MenuApi.createMenu(this.currentCategory, menuName);
 
-      // 순서 보장 부분 2
       this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
       render();
+
       $("#menu-name").value = "";
     };
 
@@ -136,9 +139,6 @@ function App() {
 
       if (updatedMenuName) {
         await MenuApi.updateMenu(this.currentCategory, updatedMenuName, updateMenuId);
-
-        // this.menu[this.currentCategory][updateMenuIdx].name = updatedMenuName;
-        // store.setLocalStorage(this.menu);
 
         this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
         render();
@@ -160,13 +160,12 @@ function App() {
     }
 
     // 메뉴 품절 상태 관리
-    const soldOutMenu = (e) => {
-      const soldOutMenuIdx = e.target.closest("li").dataset.menuId;
-      this.menu[this.currentCategory][soldOutMenuIdx].soldOut =
-        !this.menu[this.currentCategory][soldOutMenuIdx].soldOut;
+    const soldOutMenu = async (e) => {
+      const soldOutMenuId = e.target.closest("li").dataset.menuId;
 
-      store.setLocalStorage(this.menu);
+      await MenuApi.toggleSoldOutMenu(this.currentCategory, soldOutMenuId);
 
+      this.menu[this.currentCategory] = await MenuApi.getAllMenuByCategory(this.currentCategory);
       render();
     }
 
